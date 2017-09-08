@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "lib/index.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>index.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">import</span> vow <span class="hljs-keyword">from</span> <span class="hljs-string">'vow'</span>
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">promiseSpool</span> (<span class="hljs-params">options</span>) </span>{
+  <span class="hljs-keyword">let</span> promiseSpool = <span class="hljs-keyword">new</span> PromiseSpool(options)
+  promiseSpool.spool()
+  <span class="hljs-keyword">return</span> promiseSpool.done
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PromiseSpool</span> </span>{
+  <span class="hljs-keyword">constructor</span> (options) {
+    <span class="hljs-keyword">if</span> (!options.fetch) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'fetch fn required'</span>)
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> options.fetch !== <span class="hljs-string">'function'</span>) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'fetch must be fn'</span>)
+    <span class="hljs-keyword">if</span> (!options.worker) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'worker fn required'</span>)
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> options.worker !== <span class="hljs-string">'function'</span>) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'worker must be fn'</span>)
+    <span class="hljs-keyword">if</span> (!options.concurrency) options.concurrency = <span class="hljs-number">2</span>
+    <span class="hljs-keyword">if</span> (!options.highWaterMark) options.highWaterMark = <span class="hljs-number">2</span>
+    <span class="hljs-built_in">Object</span>.assign(<span class="hljs-keyword">this</span>, options)
+    <span class="hljs-keyword">this</span>.requested = vow.resolve()
+    <span class="hljs-keyword">this</span>.buffer = []
+    <span class="hljs-keyword">this</span>.waiting = []
+    <span class="hljs-keyword">this</span>.workers = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">this</span>.count = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">this</span>.doneDefer = vow.defer()
+    <span class="hljs-keyword">this</span>.done = <span class="hljs-keyword">this</span>.doneDefer.promise()
+  }
+  more () {
+    <span class="hljs-keyword">if</span> (
+      (<span class="hljs-keyword">this</span>.buffer.length &gt; <span class="hljs-keyword">this</span>.highWaterMark) ||
+      (<span class="hljs-keyword">this</span>.exhausted) ||
+      (!vow.isFulfilled(<span class="hljs-keyword">this</span>.requested))
+    ) <span class="hljs-keyword">return</span>
+    <span class="hljs-keyword">this</span>.requested = <span class="hljs-keyword">this</span>.fetch(<span class="hljs-keyword">this</span>.count)
+    .then(<span class="hljs-function">(<span class="hljs-params">items</span>) =&gt;</span> {
+      <span class="hljs-keyword">this</span>.count += items.length
+      items.forEach(<span class="hljs-keyword">this</span>.queue.bind(<span class="hljs-keyword">this</span>))
+      <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.buffer.length &lt; <span class="hljs-keyword">this</span>.highWaterMark) {
+        process.nextTick(<span class="hljs-keyword">this</span>.more.bind(<span class="hljs-keyword">this</span>))
+      }
+    })
+    .catch(<span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> <span class="hljs-keyword">this</span>.doneDefer.reject(err))
+  }
+  queue (item) {
+    <span class="hljs-keyword">if</span> (item === <span class="hljs-literal">null</span>) <span class="hljs-keyword">this</span>.exhausted = <span class="hljs-literal">true</span>
+    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.waiting.length) <span class="hljs-keyword">this</span>.waiting.shift().resolve(item)
+    <span class="hljs-keyword">else</span> <span class="hljs-keyword">this</span>.buffer.push(item)
+  }
+  next () {
+    <span class="hljs-keyword">this</span>.more()
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.exhausted &amp;&amp; <span class="hljs-keyword">this</span>.buffer.length === <span class="hljs-number">0</span>) {
+      <span class="hljs-keyword">return</span> vow.reject(<span class="hljs-string">'end'</span>)
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.buffer.length) {
+      <span class="hljs-keyword">return</span> vow.resolve(<span class="hljs-keyword">this</span>.buffer.shift())
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-keyword">let</span> waiting = vow.defer()
+      <span class="hljs-keyword">this</span>.waiting.push(waiting)
+      <span class="hljs-keyword">return</span> waiting.promise()
+    }
+  }
+  spool () {
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.workers &gt;= <span class="hljs-keyword">this</span>.concurrency) <span class="hljs-keyword">return</span>
+    <span class="hljs-keyword">this</span>.workers++
+    <span class="hljs-keyword">this</span>.next()
+    .then(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> <span class="hljs-keyword">this</span>.worker(item, <span class="hljs-keyword">this</span>.queue.bind(<span class="hljs-keyword">this</span>)))
+    .then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+      <span class="hljs-keyword">this</span>.workers--
+      <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.exhausted &amp; <span class="hljs-keyword">this</span>.buffer.length === <span class="hljs-number">0</span> &amp;&amp; <span class="hljs-keyword">this</span>.workers === <span class="hljs-number">0</span>) {
+        <span class="hljs-keyword">this</span>.doneDefer.resolve()
+      } <span class="hljs-keyword">else</span> {
+        process.nextTick(<span class="hljs-keyword">this</span>.spool.bind(<span class="hljs-keyword">this</span>))
+      }
+    })
+    .catch(<span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+      <span class="hljs-keyword">this</span>.workers--
+      <span class="hljs-keyword">if</span> (err !== <span class="hljs-string">'end'</span>) <span class="hljs-keyword">throw</span> err
+    })
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.workers &lt; <span class="hljs-keyword">this</span>.concurrency) process.nextTick(<span class="hljs-keyword">this</span>.spool.bind(<span class="hljs-keyword">this</span>))
+  }
+}
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>
