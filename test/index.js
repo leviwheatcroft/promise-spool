@@ -58,4 +58,20 @@ describe('promise-spool test', () => {
     })
     .catch(dbg)
   })
+  it('should not call fetch while pending', (done) => {
+    promiseSpool({
+      fetch: (retrieved) => {
+        // dbg('fetch')
+        return vow.timeout([1, 2, 3, null], 500)
+      },
+      worker: (item) => {
+        return vow.timeout(item, 50)
+      }
+    })
+    .then(() => {
+      assert.ok(true)
+      done()
+    })
+    .catch(dbg)
+  })
 })
