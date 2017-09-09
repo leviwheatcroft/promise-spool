@@ -105,7 +105,9 @@
     }
   }
   spool () {
-    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.workers &gt;= <span class="hljs-keyword">this</span>.concurrency) <span class="hljs-keyword">return</span>
+    <span class="hljs-keyword">while</span> (<span class="hljs-keyword">this</span>.workers &lt; <span class="hljs-keyword">this</span>.concurrency) <span class="hljs-keyword">this</span>.spawn()
+  }
+  spawn () {
     <span class="hljs-keyword">this</span>.workers++
     <span class="hljs-keyword">this</span>.next()
     .then(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> <span class="hljs-keyword">this</span>.worker(item, <span class="hljs-keyword">this</span>.queue.bind(<span class="hljs-keyword">this</span>)))
@@ -121,7 +123,6 @@
       <span class="hljs-keyword">this</span>.workers--
       <span class="hljs-keyword">if</span> (err !== <span class="hljs-string">'end'</span>) <span class="hljs-keyword">throw</span> err
     })
-    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.workers &lt; <span class="hljs-keyword">this</span>.concurrency) process.nextTick(<span class="hljs-keyword">this</span>.spool.bind(<span class="hljs-keyword">this</span>))
   }
 }
 

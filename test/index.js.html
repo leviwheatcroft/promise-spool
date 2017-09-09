@@ -178,6 +178,34 @@ done()
     })
     .catch(dbg)
   })
+  it(<span class="hljs-string">'should not call fetch while pending'</span>, (done) =&gt; {
+    promiseSpool({
+      <span class="hljs-attr">fetch</span>: <span class="hljs-function">(<span class="hljs-params">retrieved</span>) =&gt;</span> {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>dbg('fetch')</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">        <span class="hljs-keyword">return</span> vow.timeout([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-literal">null</span>], <span class="hljs-number">500</span>)
+      },
+      <span class="hljs-attr">worker</span>: <span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> {
+        <span class="hljs-keyword">return</span> vow.timeout(item, <span class="hljs-number">50</span>)
+      }
+    })
+    .then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+      assert.ok(<span class="hljs-literal">true</span>)
+      done()
+    })
+    .catch(dbg)
+  })
 })
 
 </pre>
