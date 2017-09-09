@@ -66,7 +66,8 @@ describe('promise-spool test', () => {
       },
       worker: (item) => {
         return vow.timeout(item, 50)
-      }
+      },
+      concurrency: 4
     })
     .then(() => {
       assert.ok(true)
