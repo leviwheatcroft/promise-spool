@@ -198,7 +198,8 @@ done()
       },
       <span class="hljs-attr">worker</span>: <span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> {
         <span class="hljs-keyword">return</span> vow.timeout(item, <span class="hljs-number">50</span>)
-      }
+      },
+      <span class="hljs-attr">concurrency</span>: <span class="hljs-number">4</span>
     })
     .then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
       assert.ok(<span class="hljs-literal">true</span>)

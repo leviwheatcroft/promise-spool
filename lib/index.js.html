@@ -77,13 +77,16 @@
       (<span class="hljs-keyword">this</span>.exhausted) ||
       (!vow.isFulfilled(<span class="hljs-keyword">this</span>.requested))
     ) <span class="hljs-keyword">return</span>
-    <span class="hljs-keyword">this</span>.requested = <span class="hljs-keyword">this</span>.fetch(<span class="hljs-keyword">this</span>.count)
+    <span class="hljs-keyword">let</span> defer = vow.defer()
+    <span class="hljs-keyword">this</span>.requested = defer.promise()
+    <span class="hljs-keyword">this</span>.fetch(<span class="hljs-keyword">this</span>.count)
     .then(<span class="hljs-function">(<span class="hljs-params">items</span>) =&gt;</span> {
       <span class="hljs-keyword">this</span>.count += items.length
       items.forEach(<span class="hljs-keyword">this</span>.queue.bind(<span class="hljs-keyword">this</span>))
       <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.buffer.length &lt; <span class="hljs-keyword">this</span>.highWaterMark) {
         process.nextTick(<span class="hljs-keyword">this</span>.more.bind(<span class="hljs-keyword">this</span>))
       }
+      defer.resolve()
     })
     .catch(<span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> <span class="hljs-keyword">this</span>.doneDefer.reject(err))
   }
