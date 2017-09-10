@@ -74,6 +74,22 @@ describe('promise-spool test', () => {
     })
     .then(done)
   }).timeout(500)
+  it('should resolve when result is async', (done) => {
+    promiseSpool({
+      fetch: (retrieved) => vow.delay([1, 2, 3, null], 200),
+      worker: (item) => vow.resolve(item, 50),
+      concurrency: 2
+    })
+    .then(done)
+  }).timeout(500)
+  it('worker error should be handled', (done) => {
+    promiseSpool({
+      fetch: (retrieved) => vow.resolve([1, 2, 3, null]),
+      worker: (item) => { throw new Error('test error') },
+      concurrency: 2
+    })
+    .then(done)
+  })
   it('should not call fetch while pending', (done) => {
     let count = 0
     promiseSpool({
