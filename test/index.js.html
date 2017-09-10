@@ -215,10 +215,10 @@ done()
     promiseSpool({
       <span class="hljs-attr">fetch</span>: <span class="hljs-function">(<span class="hljs-params">retrieved</span>) =&gt;</span> {
         count++
-        <span class="hljs-keyword">return</span> vow.timeout([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-literal">null</span>], <span class="hljs-number">500</span>)
+        <span class="hljs-keyword">return</span> vow.delay([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-literal">null</span>], <span class="hljs-number">500</span>)
       },
       <span class="hljs-attr">worker</span>: <span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> {
-        <span class="hljs-keyword">return</span> vow.timeout(item, <span class="hljs-number">50</span>)
+        <span class="hljs-keyword">return</span> vow.resolve(item, <span class="hljs-number">50</span>)
       },
       <span class="hljs-attr">concurrency</span>: <span class="hljs-number">2</span>
     })
@@ -227,6 +227,14 @@ done()
       done()
     })
     .catch(dbg)
+  })
+  it(<span class="hljs-string">'worker resolve when no results are returned'</span>, (done) =&gt; {
+    promiseSpool({
+      <span class="hljs-attr">fetch</span>: <span class="hljs-function">(<span class="hljs-params">retrieved</span>) =&gt;</span> vow.resolve([<span class="hljs-literal">null</span>]),
+      <span class="hljs-attr">worker</span>: <span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> vow.resolve(item),
+      <span class="hljs-attr">concurrency</span>: <span class="hljs-number">2</span>
+    })
+    .then(done)
   })
 })
 

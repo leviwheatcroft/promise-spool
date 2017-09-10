@@ -184,20 +184,7 @@
         <td class="code highlight">
           <pre class="javascript">    <span class="hljs-keyword">if</span> (item === <span class="hljs-literal">null</span>) {
       <span class="hljs-keyword">this</span>.exhausted = <span class="hljs-literal">true</span>
-</pre>
-        </td>
-      </tr>
-    
-      <tr>
-        <td class="docs">
-          <div class="pilwrap">
-  <a class="pilcrow" href="#section-9" id="section-9"></a>
-</div>
-<p>kill waiting</p>
-
-        </td>
-        <td class="code highlight">
-          <pre class="javascript">      <span class="hljs-keyword">this</span>.waiting.forEach(<span class="hljs-function">(<span class="hljs-params">waiting</span>) =&gt;</span> waiting.reject(<span class="hljs-string">'end'</span>))
+      <span class="hljs-keyword">this</span>.resolveState()
     } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.waiting.length) {
 </pre>
         </td>
@@ -206,7 +193,7 @@
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-10" id="section-10"></a>
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
 </div>
 <p>pass item to waiting worker</p>
 
@@ -221,7 +208,7 @@
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-11" id="section-11"></a>
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
 </div>
 <p>or buffer it</p>
 
@@ -238,7 +225,7 @@
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-12" id="section-12"></a>
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
 </div>
 <p>if (this.exhausted &amp;&amp; this.buffer.length === 0) {
 return vow.reject('end')
@@ -254,7 +241,7 @@ return vow.reject('end')
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-13" id="section-13"></a>
+  <a class="pilcrow" href="#section-12" id="section-12"></a>
 </div>
 <p>check if more items are needed</p>
 
@@ -285,7 +272,7 @@ return vow.reject('end')
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-14" id="section-14"></a>
+  <a class="pilcrow" href="#section-13" id="section-13"></a>
 </div>
 <p>allow unused workers to die quietly</p>
 
@@ -299,7 +286,7 @@ return vow.reject('end')
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-15" id="section-15"></a>
+  <a class="pilcrow" href="#section-14" id="section-14"></a>
 </div>
 <p>other errors shouldn't terminate the whole process
 maybe add an option for this ?</p>
@@ -321,7 +308,7 @@ maybe add an option for this ?</p>
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-16" id="section-16"></a>
+  <a class="pilcrow" href="#section-15" id="section-15"></a>
 </div>
 <p>dbg('resolveState')
 dbg('this.exhausted', this.exhausted)
@@ -339,7 +326,7 @@ dbg('this.waiting.length', this.waiting.length)</p>
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-17" id="section-17"></a>
+  <a class="pilcrow" href="#section-16" id="section-16"></a>
 </div>
 <p>detect end state</p>
 
@@ -361,7 +348,7 @@ dbg('this.waiting.length', this.waiting.length)</p>
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-18" id="section-18"></a>
+  <a class="pilcrow" href="#section-17" id="section-17"></a>
 </div>
 <p>detect flowing state</p>
 
@@ -371,7 +358,7 @@ dbg('this.waiting.length', this.waiting.length)</p>
       !<span class="hljs-keyword">this</span>.exhausted || <span class="hljs-comment">// set by queue when `null` is queued</span>
       <span class="hljs-keyword">this</span>.buffer.length !== <span class="hljs-number">0</span> <span class="hljs-comment">// something waiting</span>
     ) {
-      process.nextTick(<span class="hljs-keyword">this</span>.spawn.bind(<span class="hljs-keyword">this</span>))
+      process.nextTick(<span class="hljs-keyword">this</span>.spool.bind(<span class="hljs-keyword">this</span>))
       <span class="hljs-keyword">return</span>
     }
 
@@ -382,7 +369,7 @@ dbg('this.waiting.length', this.waiting.length)</p>
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-19" id="section-19"></a>
+  <a class="pilcrow" href="#section-18" id="section-18"></a>
 </div>
 <p>if neither of the above match, we're in a tail state, nothing more to do
 but workers are still working</p>
