@@ -47,6 +47,8 @@
         </td>
         <td class="code highlight">
           <pre class="javascript"><span class="hljs-keyword">import</span> vow <span class="hljs-keyword">from</span> <span class="hljs-string">'vow'</span>
+<span class="hljs-keyword">import</span> debug <span class="hljs-keyword">from</span> <span class="hljs-string">'debug'</span>
+<span class="hljs-keyword">const</span> dbg = debug(<span class="hljs-string">'promise-spool'</span>)
 
 <span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">promiseSpool</span> (<span class="hljs-params">options</span>) </span>{
   <span class="hljs-keyword">let</span> promiseSpool = <span class="hljs-keyword">new</span> PromiseSpool(options)
@@ -56,50 +58,211 @@
 
 <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PromiseSpool</span> </span>{
   <span class="hljs-keyword">constructor</span> (options) {
-    <span class="hljs-keyword">if</span> (!options.fetch) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'fetch fn required'</span>)
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>sane options &amp; assign to instance</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">if</span> (!options.fetch) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'fetch fn required'</span>)
     <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> options.fetch !== <span class="hljs-string">'function'</span>) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'fetch must be fn'</span>)
     <span class="hljs-keyword">if</span> (!options.worker) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'worker fn required'</span>)
     <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> options.worker !== <span class="hljs-string">'function'</span>) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'worker must be fn'</span>)
     <span class="hljs-keyword">if</span> (!options.concurrency) options.concurrency = <span class="hljs-number">2</span>
     <span class="hljs-keyword">if</span> (!options.highWaterMark) options.highWaterMark = <span class="hljs-number">2</span>
     <span class="hljs-built_in">Object</span>.assign(<span class="hljs-keyword">this</span>, options)
-    <span class="hljs-keyword">this</span>.requested = vow.resolve()
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>prime properties</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">this</span>.requested = vow.resolve()
     <span class="hljs-keyword">this</span>.buffer = []
     <span class="hljs-keyword">this</span>.waiting = []
     <span class="hljs-keyword">this</span>.workers = <span class="hljs-number">0</span>
     <span class="hljs-keyword">this</span>.count = <span class="hljs-number">0</span>
-    <span class="hljs-keyword">this</span>.doneDefer = vow.defer()
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>create promise to resolve when done</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">this</span>.doneDefer = vow.defer()
     <span class="hljs-keyword">this</span>.done = <span class="hljs-keyword">this</span>.doneDefer.promise()
   }
   more () {
     <span class="hljs-keyword">if</span> (
-      (<span class="hljs-keyword">this</span>.buffer.length &gt; <span class="hljs-keyword">this</span>.highWaterMark) ||
-      (<span class="hljs-keyword">this</span>.exhausted) ||
-      (!vow.isFulfilled(<span class="hljs-keyword">this</span>.requested))
+      <span class="hljs-keyword">this</span>.buffer.length &gt; <span class="hljs-keyword">this</span>.highWaterMark || <span class="hljs-comment">// enough in the buffer</span>
+      <span class="hljs-keyword">this</span>.exhausted || <span class="hljs-comment">// fetch is exhausted</span>
+      !vow.isFulfilled(<span class="hljs-keyword">this</span>.requested) <span class="hljs-comment">// already fetching something</span>
     ) <span class="hljs-keyword">return</span>
-    <span class="hljs-keyword">let</span> defer = vow.defer()
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>create deferred to determine whether a request is in flight</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">let</span> defer = vow.defer()
     <span class="hljs-keyword">this</span>.requested = defer.promise()
-    <span class="hljs-keyword">this</span>.fetch(<span class="hljs-keyword">this</span>.count)
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>call provided fetch</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">this</span>.fetch(<span class="hljs-keyword">this</span>.count)
     .then(<span class="hljs-function">(<span class="hljs-params">items</span>) =&gt;</span> {
       <span class="hljs-keyword">this</span>.count += items.length
       items.forEach(<span class="hljs-keyword">this</span>.queue.bind(<span class="hljs-keyword">this</span>))
-      <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.buffer.length &lt; <span class="hljs-keyword">this</span>.highWaterMark) {
-        process.nextTick(<span class="hljs-keyword">this</span>.more.bind(<span class="hljs-keyword">this</span>))
-      }
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>check if we still need more</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">      process.nextTick(<span class="hljs-keyword">this</span>.more.bind(<span class="hljs-keyword">this</span>))
       defer.resolve()
     })
     .catch(<span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> <span class="hljs-keyword">this</span>.doneDefer.reject(err))
   }
   queue (item) {
-    <span class="hljs-keyword">if</span> (item === <span class="hljs-literal">null</span>) <span class="hljs-keyword">this</span>.exhausted = <span class="hljs-literal">true</span>
-    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.waiting.length) <span class="hljs-keyword">this</span>.waiting.shift().resolve(item)
-    <span class="hljs-keyword">else</span> <span class="hljs-keyword">this</span>.buffer.push(item)
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>null symbolises fetch is exhausted</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">if</span> (item === <span class="hljs-literal">null</span>) {
+      <span class="hljs-keyword">this</span>.exhausted = <span class="hljs-literal">true</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>kill waiting</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">      <span class="hljs-keyword">this</span>.waiting.forEach(<span class="hljs-function">(<span class="hljs-params">waiting</span>) =&gt;</span> waiting.reject(<span class="hljs-string">'end'</span>))
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.waiting.length) {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
+</div>
+<p>pass item to waiting worker</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">      <span class="hljs-keyword">this</span>.waiting.shift().resolve(item)
+    } <span class="hljs-keyword">else</span> {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
+</div>
+<p>or buffer it</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">      <span class="hljs-keyword">this</span>.buffer.push(item)
+    }
   }
   next () {
-    <span class="hljs-keyword">this</span>.more()
-    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.exhausted &amp;&amp; <span class="hljs-keyword">this</span>.buffer.length === <span class="hljs-number">0</span>) {
-      <span class="hljs-keyword">return</span> vow.reject(<span class="hljs-string">'end'</span>)
-    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.buffer.length) {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12"></a>
+</div>
+<p>if (this.exhausted &amp;&amp; this.buffer.length === 0) {
+return vow.reject('end')
+}</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13"></a>
+</div>
+<p>check if more items are needed</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">this</span>.more()
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.buffer.length) {
       <span class="hljs-keyword">return</span> vow.resolve(<span class="hljs-keyword">this</span>.buffer.shift())
     } <span class="hljs-keyword">else</span> {
       <span class="hljs-keyword">let</span> waiting = vow.defer()
@@ -116,17 +279,86 @@
     .then(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> <span class="hljs-keyword">this</span>.worker(item, <span class="hljs-keyword">this</span>.queue.bind(<span class="hljs-keyword">this</span>)))
     .then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
       <span class="hljs-keyword">this</span>.workers--
-      <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.exhausted &amp; <span class="hljs-keyword">this</span>.buffer.length === <span class="hljs-number">0</span> &amp;&amp; <span class="hljs-keyword">this</span>.workers === <span class="hljs-number">0</span>) {
-        <span class="hljs-keyword">this</span>.doneDefer.resolve()
-      } <span class="hljs-keyword">else</span> {
-        process.nextTick(<span class="hljs-keyword">this</span>.spool.bind(<span class="hljs-keyword">this</span>))
-      }
+      <span class="hljs-keyword">this</span>.resolveState()
     })
     .catch(<span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
       <span class="hljs-keyword">this</span>.workers--
-      <span class="hljs-keyword">if</span> (err !== <span class="hljs-string">'end'</span>) <span class="hljs-keyword">throw</span> err
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14"></a>
+</div>
+<p>allow unused workers to die quietly</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">      <span class="hljs-keyword">if</span> (err !== <span class="hljs-string">'end'</span>) <span class="hljs-keyword">throw</span> err
     })
   }
+  resolveState () {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15"></a>
+</div>
+<p>dbg(<code>${this.exhausted} ${this.buffer.length} ${this.workers}</code>)
+detect end state</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">if</span> (
+      <span class="hljs-keyword">this</span>.exhausted &amp;&amp; <span class="hljs-comment">// set by queue when `null` is queued</span>
+      <span class="hljs-keyword">this</span>.buffer.length === <span class="hljs-number">0</span> &amp;&amp; <span class="hljs-comment">// nothing waiting for free worker</span>
+      <span class="hljs-keyword">this</span>.workers === <span class="hljs-keyword">this</span>.waiting.length <span class="hljs-comment">// no workers working</span>
+    ) {
+      <span class="hljs-keyword">this</span>.waiting.forEach(<span class="hljs-function">(<span class="hljs-params">worker</span>) =&gt;</span> worker.reject(<span class="hljs-string">'end'</span>))
+      <span class="hljs-keyword">this</span>.doneDefer.resolve()
+      <span class="hljs-keyword">return</span>
+    }
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16"></a>
+</div>
+<p>detect flowing state</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">if</span> (
+      !<span class="hljs-keyword">this</span>.exhausted || <span class="hljs-comment">// set by queue when `null` is queued</span>
+      <span class="hljs-keyword">this</span>.buffer.length !== <span class="hljs-number">0</span> <span class="hljs-comment">// something waiting</span>
+    ) {
+      process.nextTick(<span class="hljs-keyword">this</span>.spawn.bind(<span class="hljs-keyword">this</span>))
+      <span class="hljs-keyword">return</span>
+    }
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17"></a>
+</div>
+<p>if neither of the above match, we're in a tail state, nothing more to do
+but workers are still working</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  }
 }
 
 </pre>
