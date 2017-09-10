@@ -1,6 +1,6 @@
 {
   "name": "promise-spool",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "spool up promise based workers, feed them from a paginated api",
   "main": "dist/index.js",
   "scripts": {
