@@ -58,19 +58,36 @@ describe('promise-spool test', () => {
     })
     .catch(dbg)
   })
+  it('should resolve when results < concurrency', (done) => {
+    promiseSpool({
+      fetch: (retrieved) => vow.resolve([1, 2, 3, null]),
+      worker: (item) => vow.resolve(item, 50),
+      concurrency: 10
+    })
+    .then(done)
+  }).timeout(500)
+  it('should resolve when results > concurrency', (done) => {
+    promiseSpool({
+      fetch: (retrieved) => vow.resolve([1, 2, 3, null]),
+      worker: (item) => vow.resolve(item, 50),
+      concurrency: 2
+    })
+    .then(done)
+  }).timeout(500)
   it('should not call fetch while pending', (done) => {
+    let count = 0
     promiseSpool({
       fetch: (retrieved) => {
-        // dbg('fetch')
+        count++
         return vow.timeout([1, 2, 3, null], 500)
       },
       worker: (item) => {
         return vow.timeout(item, 50)
       },
-      concurrency: 4
+      concurrency: 2
     })
     .then(() => {
-      assert.ok(true)
+      assert.equal(count, 1)
       done()
     })
     .catch(dbg)
