@@ -194,6 +194,22 @@ done()
     })
     .then(done)
   }).timeout(<span class="hljs-number">500</span>)
+  it(<span class="hljs-string">'should resolve when result is async'</span>, (done) =&gt; {
+    promiseSpool({
+      <span class="hljs-attr">fetch</span>: <span class="hljs-function">(<span class="hljs-params">retrieved</span>) =&gt;</span> vow.delay([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-literal">null</span>], <span class="hljs-number">200</span>),
+      <span class="hljs-attr">worker</span>: <span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> vow.resolve(item, <span class="hljs-number">50</span>),
+      <span class="hljs-attr">concurrency</span>: <span class="hljs-number">2</span>
+    })
+    .then(done)
+  }).timeout(<span class="hljs-number">500</span>)
+  it(<span class="hljs-string">'worker error should be handled'</span>, (done) =&gt; {
+    promiseSpool({
+      <span class="hljs-attr">fetch</span>: <span class="hljs-function">(<span class="hljs-params">retrieved</span>) =&gt;</span> vow.resolve([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-literal">null</span>]),
+      <span class="hljs-attr">worker</span>: <span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> { <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'test error'</span>) },
+      <span class="hljs-attr">concurrency</span>: <span class="hljs-number">2</span>
+    })
+    .then(done)
+  })
   it(<span class="hljs-string">'should not call fetch while pending'</span>, (done) =&gt; {
     <span class="hljs-keyword">let</span> count = <span class="hljs-number">0</span>
     promiseSpool({

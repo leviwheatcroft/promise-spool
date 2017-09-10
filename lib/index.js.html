@@ -277,12 +277,7 @@ return vow.reject('end')
     <span class="hljs-keyword">this</span>.workers++
     <span class="hljs-keyword">this</span>.next()
     .then(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> <span class="hljs-keyword">this</span>.worker(item, <span class="hljs-keyword">this</span>.queue.bind(<span class="hljs-keyword">this</span>)))
-    .then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
-      <span class="hljs-keyword">this</span>.workers--
-      <span class="hljs-keyword">this</span>.resolveState()
-    })
     .catch(<span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
-      <span class="hljs-keyword">this</span>.workers--
 </pre>
         </td>
       </tr>
@@ -296,15 +291,7 @@ return vow.reject('end')
 
         </td>
         <td class="code highlight">
-          <pre class="javascript">      <span class="hljs-keyword">if</span> (err !== <span class="hljs-string">'end'</span>) <span class="hljs-keyword">throw</span> err
-    })
-  }
-  resolveState () {
-    dbg(<span class="hljs-string">'resolveState'</span>)
-    dbg(<span class="hljs-string">'this.exhausted'</span>, <span class="hljs-keyword">this</span>.exhausted)
-    dbg(<span class="hljs-string">'this.buffer.length'</span>, <span class="hljs-keyword">this</span>.buffer.length)
-    dbg(<span class="hljs-string">'this.workers'</span>, <span class="hljs-keyword">this</span>.workers)
-    dbg(<span class="hljs-string">'this.waiting.length'</span>, <span class="hljs-keyword">this</span>.waiting.length)
+          <pre class="javascript">      <span class="hljs-keyword">if</span> (err === <span class="hljs-string">'end'</span>) <span class="hljs-keyword">return</span>
 </pre>
         </td>
       </tr>
@@ -314,8 +301,47 @@ return vow.reject('end')
           <div class="pilwrap">
   <a class="pilcrow" href="#section-15" id="section-15"></a>
 </div>
-<p>dbg(<code>${this.exhausted} ${this.buffer.length} ${this.workers}</code>)
-detect end state</p>
+<p>other errors shouldn't terminate the whole process
+maybe add an option for this ?</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">      <span class="hljs-built_in">console</span>.log(err)
+    })
+    .then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+      <span class="hljs-keyword">this</span>.workers--
+      <span class="hljs-keyword">this</span>.resolveState()
+    })
+  }
+  resolveState () {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16"></a>
+</div>
+<p>dbg('resolveState')
+dbg('this.exhausted', this.exhausted)
+dbg('this.buffer.length', this.buffer.length)
+dbg('this.workers', this.workers)
+dbg('this.waiting.length', this.waiting.length)</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17"></a>
+</div>
+<p>detect end state</p>
 
         </td>
         <td class="code highlight">
@@ -335,7 +361,7 @@ detect end state</p>
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-16" id="section-16"></a>
+  <a class="pilcrow" href="#section-18" id="section-18"></a>
 </div>
 <p>detect flowing state</p>
 
@@ -356,7 +382,7 @@ detect end state</p>
       <tr>
         <td class="docs">
           <div class="pilwrap">
-  <a class="pilcrow" href="#section-17" id="section-17"></a>
+  <a class="pilcrow" href="#section-19" id="section-19"></a>
 </div>
 <p>if neither of the above match, we're in a tail state, nothing more to do
 but workers are still working</p>
