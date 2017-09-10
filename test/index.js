@@ -95,10 +95,10 @@ describe('promise-spool test', () => {
     promiseSpool({
       fetch: (retrieved) => {
         count++
-        return vow.timeout([1, 2, 3, null], 500)
+        return vow.delay([1, 2, 3, null], 500)
       },
       worker: (item) => {
-        return vow.timeout(item, 50)
+        return vow.resolve(item, 50)
       },
       concurrency: 2
     })
@@ -107,5 +107,13 @@ describe('promise-spool test', () => {
       done()
     })
     .catch(dbg)
+  })
+  it('worker resolve when no results are returned', (done) => {
+    promiseSpool({
+      fetch: (retrieved) => vow.resolve([null]),
+      worker: (item) => vow.resolve(item),
+      concurrency: 2
+    })
+    .then(done)
   })
 })
